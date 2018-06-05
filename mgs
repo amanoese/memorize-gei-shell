@@ -3,6 +3,11 @@
 cmd="$(cat /dev/stdin | tail -1 | sed -r 's/[ 0-9]+mgs //')"
 files=$(ls | grep -E 'memorize-shll-gei-.{15}$')
 
+if [[ "$cmd" =~  [:space:]*'-r'[:space:]* ]]; then
+  rm $files
+  exit 0;
+fi;
+
 tmpfile=$(mktemp memorize-shll-gei-XXXXXXXXXXXXXXX)
 echo "$cmd" > "$tmpfile"
 
@@ -14,10 +19,11 @@ if [ "$matchf" != "" ]; then
   matchc="$(cat "$matchf" | head -1 | wc -c)"
   restc="$(echo "$cmd" | cut -c $(($matchc + 1))-)"
 
-  [[ "$restc" =~  [:space:]* ]] && rm "$tmpfile"
-
   echo "cache was used on the command!"
-  cat "$matchf" | tail +2 | "${restc:-cat}" | tee -a "${tmpfile:-/dev/null}"
+  cat "$matchf" | tail +2 | "${restc:-cat}" | tee -a "$tmpfile"
+
+  [[ "$restc" =~ [:space:]* ]] && rm -f "$tmpfile"
+
   exit 0;
 fi;
 
